@@ -6,7 +6,6 @@ import { AppConfig } from '@base/config/env/app-env';
 
 const errorHandler = (error: any, req: Request, res: Response, next: NextFunction) => {
 	let statusCode = 500;
-	console.log(error);
 
 	Logger.error(error);
 

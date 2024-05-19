@@ -3,7 +3,6 @@ import Connection from './connection';
 import { QueueLists } from '@base/constants/queue';
 
 class Publisher {
-	private connection: Connection = Connection.getInstance();
 
 	public static createQueue(queueName: QueueLists): Queue {
 		return new Queue(queueName, { connection: Connection.getInstance().redisConnection });

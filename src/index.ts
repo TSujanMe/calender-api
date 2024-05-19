@@ -1,3 +1,4 @@
+/// <reference path="./types/express/index.d.ts" />
 import 'module-alias/register';
 import 'reflect-metadata';
 import 'dotenv/config';
@@ -13,6 +14,7 @@ import { StatusCodes } from './constants/status-code';
 import errorHandler from './middlewares/error-middleware';
 import Logger from './config/winston-config';
 import Connection from './config/mq/connection';
+import WorkerClient from './config/mq/worker';
 
 export const startServer = async () => {
 	const app: Application = express();
@@ -30,7 +32,6 @@ export const startServer = async () => {
 	// Error handling
 	app.use(errorHandler);
 
-
 	app.all('*', (_, res) => {
 		res.status(StatusCodes.NOT_FOUND).json({
 			message: 'No Route found',
@@ -40,7 +41,7 @@ export const startServer = async () => {
 
 	try {
 		await appDataSource.initialize();
-		const connection = Connection.getInstance();		
+		const connection = Connection.getInstance();
 		const server = app.listen(AppConfig.PORT, () => {
 			Logger.info(`Server is running on port ${AppConfig.PORT}`);
 			Logger.info(`SQlite Database is connected`);

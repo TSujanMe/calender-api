@@ -3,7 +3,15 @@ import { HttpException } from '@base/utils/app-error';
 import { autoInjectable, singleton } from 'tsyringe';
 import { Repository } from 'typeorm'; // Importing getRepository and Repository
 import { Event } from '../models/event-model';
+import { User } from '../models/user-model';
 import { CreateEventSchema, UpdateEventSchema } from '../schemas/event-schema';
+import Publisher from '@base/config/mq/publisher';
+import { QueueLists } from '@base/constants/queue';
+import { Queue } from 'bullmq';
+import WorkerClient from '@base/config/mq/worker';
+import Connection from '@base/config/mq/connection';
+import { EmailService } from '@base/utils/emai-utils';
+import { authConfig } from '@base/config/env/auth-env';
 
 /**
  * Service class for managing events.
@@ -12,9 +20,11 @@ import { CreateEventSchema, UpdateEventSchema } from '../schemas/event-schema';
 @singleton()
 class EventService {
 	private eventRepository: Repository<Event>;
+	private queue: Queue;
 
 	constructor() {
 		this.eventRepository = appDataSource.getRepository(Event);
+		this.queue = Publisher.createQueue(QueueLists.EMAIL);
 	}
 
 	/**
@@ -50,17 +60,64 @@ class EventService {
 	 * @param body - The data for the new event.
 	 * @returns The newly created event.
 	 */
-	public async create(user: any, body: CreateEventSchema): Promise<Event> {
-		const newUser = this.eventRepository.create({
-			attendeeEmail: body.attendeeEmail,
+	public async create(user: User, body: CreateEventSchema): Promise<Event> {
+		const attendeeEmails = body.attendeeEmail.map((data) => {
+			return { email: data.email, email_sent: false };
+		});
+		CreateEventSchema.validateTime(body);
+
+		const newEvent = this.eventRepository.create({
+			attendeeEmail: attendeeEmails,
 			startTime: body.startTime,
 			endTime: body.endTime,
 			description: body.description,
 			title: body.title,
 			creator: user,
+			timezone: body.timezone,
 		});
-		await this.eventRepository.save(newUser);
-		return newUser;
+		await this.eventRepository.save(newEvent);
+
+		if (body.attendeeEmail.length === 0) {
+			return newEvent;
+		}
+		// Now schedule it for jobs
+		const data = {
+			name: newEvent.title,
+			startTime: newEvent.startTime,
+			endTime: newEvent.endTime,
+		};
+		const jobNameForCurrent = newEvent.id + 'current';
+		const jobNameForSchedule = newEvent.id + 'schedule';
+		this.queue.add(jobNameForCurrent, data, {
+			removeOnComplete: true,
+		});
+
+		const immediateBefore = new Date(new Date(newEvent.startTime).getTime() - 60000); // 1 minute before
+		this.queue.add(jobNameForSchedule, data, {
+			delay: immediateBefore.getTime() - Date.now(),
+		});
+
+		const connection = Connection.getInstance();
+		WorkerClient.createWorker(
+			QueueLists.EMAIL,
+			async (job: any) => {
+				const jobData = job.data;
+
+				const subject = `Event: ${jobData.name}`;
+				const text = `Event: ${jobData.name} is scheduled at ${jobData.startTime} to ${jobData.endTime}`;
+				const emailService = new EmailService().sendMail({
+					from: authConfig.email.USERNAME,
+					to: body.attendeeEmail.map((data) => data.email).join(','),
+					subject: subject,
+					text,
+				});
+			},
+			{
+				connection,
+			},
+		);
+
+		return newEvent;
 	}
 
 	/**
@@ -72,10 +129,27 @@ class EventService {
 	 */
 	public async update(id: number, body: UpdateEventSchema): Promise<Event> {
 		const event = await this.getEventByID(id);
+		// Update attendees
+		const attendees = body.attendeeEmail
+			? event.attendeeEmail.map((emailData) => {
+					const existingAttendee = body.attendeeEmail.find((data) => emailData.email === data.email);
+					return existingAttendee ? emailData : { email: emailData.email, email_sent: false };
+				})
+			: event.attendeeEmail;
 
-		const updatedData = Object.assign(event, body);
+		// Reset email_sent if event time changes
+		if (event.startTime !== body.startTime || event.endTime !== body.endTime) {
+			UpdateEventSchema.validateTime(body);
+			attendees.forEach((attendee) => (attendee.email_sent = false));
+		}
 
-		const updatedEventData = await this.eventRepository.save(updatedData);
+		const updatedEvent = {
+			...event,
+			...body,
+			attendeeEmail: attendees,
+		};
+
+		const updatedEventData = await this.eventRepository.save(updatedEvent);
 
 		return updatedEventData;
 	}

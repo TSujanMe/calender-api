@@ -1,22 +1,28 @@
 // connection.ts
+import { authConfig } from '@base/config/env/auth-env';
 import nodemailer, { Transporter } from 'nodemailer';
+import Mail from 'nodemailer/lib/mailer';
 
-export class Connection {
-  private transporter: Transporter;
+export class EmailService {
+	private transporter: Transporter;
 
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.example.com',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: 'username@example.com',
-        pass: 'password',
-      },
-    });
-  }
+	constructor() {
+		this.transporter = nodemailer.createTransport({
+			host: 'smtp.gmail.com',
+			port: 465,
+			secure: true,
+			auth: {
+				user: authConfig.email.USERNAME,
+				pass: authConfig.email.EMAIL_PASSWORD,
+			},
+		});
+	}
 
-  public getTransporter(): Transporter {
-    return this.transporter;
-  }
+	public getTransporter(): Transporter {
+		return this.transporter;
+	}
+
+	public async sendMail(mailOptions: Mail.Options): Promise<any> {
+		return await this.transporter.sendMail(mailOptions);
+	}
 }

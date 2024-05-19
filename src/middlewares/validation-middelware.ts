@@ -20,8 +20,6 @@ export default class RequestValidator {
 	}
 	static validate = <T extends object>(classInstance: ClassConstructor<T>) => {
 		return async (req: Request, res: Response, next: NextFunction) => {
-			console.log(req.body, 'ues');
-
 			// *Convert body to class instance
 			const convertedObject = plainToClass(classInstance, req.body); // *Validate the class instance
 

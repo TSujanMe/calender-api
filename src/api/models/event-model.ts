@@ -1,6 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { User } from './user-model';
 
+export interface AttendeeEmailInterface {
+	email: string;
+	email_sent: boolean;
+}
+
 @Entity()
 export class Event {
 	@PrimaryGeneratedColumn()
@@ -24,8 +29,8 @@ export class Event {
 	@Column()
 	timezone: string;
 
-	@Column({ nullable: true, type: 'text' })
-	attendeeEmail: string[];
+	@Column({ nullable: true, type: 'json' })
+	attendeeEmail: AttendeeEmailInterface[];
 
 	@CreateDateColumn()
 	createdAt: Date;

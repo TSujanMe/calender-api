@@ -13,7 +13,8 @@
 			"@api/*": ["src/api/*"]
 		},
 		"emitDecoratorMetadata": true,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"skipLibCheck": true
 	},
 	"exclude": ["node_modules"],
 	"include": ["src"],
