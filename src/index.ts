@@ -30,12 +30,6 @@ export const startServer = async () => {
 	// Error handling
 	app.use(errorHandler);
 
-	app.get('/', (_, res) => {
-		res.status(StatusCodes.OK).json({
-			message: 'Welcome to the API',
-			success: true,
-		});
-	});
 
 	app.all('*', (_, res) => {
 		res.status(StatusCodes.NOT_FOUND).json({

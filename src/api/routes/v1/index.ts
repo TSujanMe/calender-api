@@ -12,7 +12,7 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 routes.map((route) => {
-	router.use(`/v1/${route.prefex}`, route.router);
+	router.use(`/v1/${route.prefex}`, ...route.middleware, route.router);
 });
 
 export default router;

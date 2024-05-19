@@ -7,7 +7,7 @@ const router = Router();
 router.get('/', (req: Request, res: Response) => {
 	res.status(StatusCodes.OK).json({
 		success: true,
-		message: 'Application',
+		message: 'Application is running',
 	});
 });
 
