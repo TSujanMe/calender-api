@@ -3,6 +3,7 @@ import { HttpException } from '@base/utils/app-error';
 import { autoInjectable, singleton } from 'tsyringe';
 import { Repository } from 'typeorm'; // Importing getRepository and Repository
 import { Event } from '../models/event-model';
+import { User } from '../models/user-model';
 import { CreateEventSchema, UpdateEventSchema } from '../schemas/event-schema';
 
 /**
@@ -50,7 +51,7 @@ class EventService {
 	 * @param body - The data for the new event.
 	 * @returns The newly created event.
 	 */
-	public async create(user: any, body: CreateEventSchema): Promise<Event> {
+	public async create(user: User, body: CreateEventSchema): Promise<Event> {
 		const newUser = this.eventRepository.create({
 			attendeeEmail: body.attendeeEmail,
 			startTime: body.startTime,
@@ -58,6 +59,7 @@ class EventService {
 			description: body.description,
 			title: body.title,
 			creator: user,
+			timezone: body.timezone,
 		});
 		await this.eventRepository.save(newUser);
 		return newUser;
@@ -72,6 +74,7 @@ class EventService {
 	 */
 	public async update(id: number, body: UpdateEventSchema): Promise<Event> {
 		const event = await this.getEventByID(id);
+		console.log(event, 'Event');
 
 		const updatedData = Object.assign(event, body);
 

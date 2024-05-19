@@ -72,7 +72,6 @@ class AuthService {
 		}
 
 		const isValidpassword = await BcryptUtils.compare(body.password, user.password);
-		console.log(isValidpassword, body, 'amzing');
 
 		if (!isValidpassword) {
 			throw HttpException.badRequest(messages['invalidPassword']);

@@ -18,12 +18,7 @@ eventRouter.post(
 	catchAsync(eventIOCContainer.create.bind(eventIOCContainer)),
 );
 
-eventRouter.put(
-	'/update',
-	isAuthenticated,
-	RequestValidator.validate(UpdateEventSchema),
-	catchAsync(eventIOCContainer.update.bind(eventIOCContainer)),
-);
+eventRouter.put('/:id', isAuthenticated, RequestValidator.validate(UpdateEventSchema), catchAsync(eventIOCContainer.update.bind(eventIOCContainer)));
 
 eventRouter.delete('/:id', isAuthenticated, catchAsync(eventIOCContainer.delete.bind(eventIOCContainer)));
 

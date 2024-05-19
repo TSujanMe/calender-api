@@ -9,15 +9,12 @@ const authService: AuthService = new AuthService();
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
 	try {
 		let token = req.headers.cookie;
-		console.log(token);
 
 		if (!token) throw HttpException.unAuthorized('You are not authorized to perform this action');
 
 		token = token.split('=')[1];
-		console.log(token, 'After split');
 
 		const credentials = await JwtUtils.verify(token, authConfig.auth.JWT_ACCESS_TOKEN_SECRET_KEY);
-		console.log(credentials, 'aMAZING');
 
 		if (!credentials.id) throw HttpException.unAuthorized('You are not authorized to perform this action');
 
@@ -27,7 +24,6 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 
 		next();
 	} catch (error: any) {
-		console.log(error);
 
 		return res.status(StatusCodes.UNAUTHORIZED).json({
 			status: false,

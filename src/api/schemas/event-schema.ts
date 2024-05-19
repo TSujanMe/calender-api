@@ -21,6 +21,10 @@ export class CreateEventSchema {
 	@IsString({ each: true })
 	@IsDefined()
 	attendeeEmail: string[];
+
+	@IsTimeZone()
+	@IsDefined()
+	timezone: string;
 }
 
 export class UpdateEventSchema {
