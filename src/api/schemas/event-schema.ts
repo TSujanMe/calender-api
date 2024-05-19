@@ -1,7 +1,14 @@
 import { HttpException } from '@base/utils/app-error';
 import { IsDateTime } from '@base/validation/isValidDate';
-import { IsDateString, IsDefined, IsEmail, IsOptional, IsString, IsTimeZone, validate, validateOrReject } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDateString, IsDefined, IsEmail, IsOptional, IsString, IsTimeZone, ValidateNested, validate, validateOrReject } from 'class-validator';
 
+export class AttendeeEmaiilSchema {
+	@IsEmail({}, { each: true })
+	@IsString({ each: true })
+	@IsDefined()
+	email: string;
+}
 export class CreateEventSchema {
 	@IsDefined()
 	@IsString()
@@ -21,10 +28,9 @@ export class CreateEventSchema {
 	@IsDateString()
 	endTime: Date;
 
-	@IsEmail({}, { each: true })
-	@IsString({ each: true })
-	@IsDefined()
-	attendeeEmail: string[];
+	@ValidateNested()
+	@Type(() => AttendeeEmaiilSchema)
+	attendeeEmail: AttendeeEmaiilSchema[];
 
 	@IsTimeZone()
 	@IsDefined()
@@ -37,10 +43,6 @@ export class CreateEventSchema {
 		if (new Date(body.startTime) >= new Date(body.endTime)) {
 			throw HttpException.badRequest('Start time must be before end time');
 		}
-	}
-
-	static async validateCreateEventSchema(data: CreateEventSchema) {
-		CreateEventSchema.validateTime(data);
 	}
 }
 
@@ -61,14 +63,20 @@ export class UpdateEventSchema {
 	@IsDateString()
 	endTime?: Date;
 
-	@IsEmail({}, { each: true })
-	@IsString({ each: true })
-	@IsOptional()
-	attendeeEmail?: string[];
+	@ValidateNested()
+	@Type(() => AttendeeEmaiilSchema)
+	attendeeEmail?: AttendeeEmaiilSchema[];
 
 	@IsTimeZone()
 	@IsDefined()
 	timezone: string;
 
-	validateTime() {}
+	static validateTime(body: UpdateEventSchema) {
+		if (new Date() >= body.startTime) {
+			throw HttpException.badRequest('Start time must be in the future');
+		}
+		if (new Date(body.startTime) >= new Date(body.endTime)) {
+			throw HttpException.badRequest('Start time must be before end time');
+		}
+	}
 }

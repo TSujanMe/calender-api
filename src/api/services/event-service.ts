@@ -52,12 +52,13 @@ class EventService {
 	 * @returns The newly created event.
 	 */
 	public async create(user: User, body: CreateEventSchema): Promise<Event> {
-		// if (new Date(body.startTime) > new Date(body.endTime))
-
+		const attendeeEmails = body.attendeeEmail.map((data) => {
+			return { email: data.email, email_sent: false };
+		});
 		CreateEventSchema.validateTime(body);
 
 		const newUser = this.eventRepository.create({
-			attendeeEmail: body.attendeeEmail,
+			attendeeEmail: attendeeEmails,
 			startTime: body.startTime,
 			endTime: body.endTime,
 			description: body.description,
@@ -78,11 +79,27 @@ class EventService {
 	 */
 	public async update(id: number, body: UpdateEventSchema): Promise<Event> {
 		const event = await this.getEventByID(id);
-		console.log(event, 'Event');
+		// Update attendees
+		const attendees = body.attendeeEmail
+			? event.attendeeEmail.map((emailData) => {
+					const existingAttendee = body.attendeeEmail.find((data) => emailData.email === data.email);
+					return existingAttendee ? emailData : { email: emailData.email, email_sent: false };
+				})
+			: event.attendeeEmail;
 
-		const updatedData = Object.assign(event, body);
+		// Reset email_sent if event time changes
+		if (event.startTime !== body.startTime || event.endTime !== body.endTime) {
+			UpdateEventSchema.validateTime(body);
+			attendees.forEach((attendee) => (attendee.email_sent = false));
+		}
 
-		const updatedEventData = await this.eventRepository.save(updatedData);
+		const updatedEvent = {
+			...event,
+			...body,
+			attendeeEmail: attendees,
+		};
+
+		const updatedEventData = await this.eventRepository.save(updatedEvent);
 
 		return updatedEventData;
 	}
