@@ -5,6 +5,8 @@ import { createResponse } from '@base/utils/response-utils';
 import { NextFunction, Request, Response } from 'express';
 import { autoInjectable } from 'tsyringe';
 import AuthService from '../services/auth-service';
+import { AppConfig } from '@base/config/env/app-env';
+import { Environment } from '@base/constants/environment';
 
 @autoInjectable()
 export class AuthController {
@@ -17,6 +19,12 @@ export class AuthController {
 			accessToken,
 			user,
 		};
+		res.cookie('access_token', accessToken, {
+			httpOnly: true,
+			sameSite: 'strict',
+			secure: AppConfig.NODE_ENV !== Environment.Development,
+			maxAge: +authConfig.auth.JWT_ACCESS_TOKEN_EXPIRATION_TIME * 60 * 1000,
+		});
 		res.status(StatusCodes.OK).json(createResponse(true, StatusCodes.OK, 'User Logged in successfully', response));
 	}
 
