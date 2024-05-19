@@ -46,9 +46,7 @@ export const startServer = async () => {
 
 	try {
 		await appDataSource.initialize();
-		const connection = Connection.getInstance();
-		console.log(connection,"Amazing");
-		
+		const connection = Connection.getInstance();		
 		const server = app.listen(AppConfig.PORT, () => {
 			Logger.info(`Server is running on port ${AppConfig.PORT}`);
 			Logger.info(`SQlite Database is connected`);
