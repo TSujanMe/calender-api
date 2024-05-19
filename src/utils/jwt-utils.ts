@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export class JwtUtils {
-	static sign(payload: any, secret: string, expiresIn: string): string {
+	static sign(payload: any, secret: string, expiresIn: any): string {
 		return jwt.sign(payload, secret, {
 			expiresIn,
 		});

@@ -1,3 +1,4 @@
+/// <reference path="./types/express/index.d.ts" />
 import 'module-alias/register';
 import 'reflect-metadata';
 import 'dotenv/config';
