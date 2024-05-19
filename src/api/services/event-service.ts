@@ -77,10 +77,14 @@ class EventService {
 		});
 		await this.eventRepository.save(newEvent);
 
+		if (body.attendeeEmail.length === 0) {
+			return newEvent;
+		}
 		// Now schedule it for jobs
 		const data = {
-			startDate: newEvent.startTime,
-			eventName: newEvent.title,
+			name: newEvent.title,
+			startTime: newEvent.startTime,
+			endTime: newEvent.endTime,
 		};
 		const jobNameForCurrent = newEvent.id + 'current';
 		const jobNameForSchedule = newEvent.id + 'schedule';
@@ -89,22 +93,18 @@ class EventService {
 		});
 
 		const immediateBefore = new Date(new Date(newEvent.startTime).getTime() - 60000); // 1 minute before
-		this.queue.add(
-			jobNameForSchedule,
-			{
-				name: 'meri pyari sagun',
-			},
-			{
-				delay: immediateBefore.getTime() - Date.now(),
-			},
-		);
+		this.queue.add(jobNameForSchedule, data, {
+			delay: immediateBefore.getTime() - Date.now(),
+		});
 
 		const connection = Connection.getInstance();
 		WorkerClient.createWorker(
 			QueueLists.EMAIL,
 			async (job: any) => {
-				const subject = `Event: ${newEvent.title}`;
-				const text = `Event: ${newEvent.title} is scheduled at ${newEvent.startTime} to ${newEvent.endTime}`;
+				const jobData = job.data;
+
+				const subject = `Event: ${jobData.name}`;
+				const text = `Event: ${jobData.name} is scheduled at ${jobData.startTime} to ${jobData.endTime}`;
 				const emailService = new EmailService().sendMail({
 					from: authConfig.email.USERNAME,
 					to: body.attendeeEmail.map((data) => data.email).join(','),
