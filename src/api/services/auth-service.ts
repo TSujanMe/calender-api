@@ -53,6 +53,7 @@ class AuthService {
 		if (doesEmailExists) {
 			throw HttpException.badRequest(messages['emailAlreadyExists']);
 		}
+		body.password = await BcryptUtils.hash(body.password);
 		const newUser = this.userRepository.create(body);
 		await this.userRepository.save(newUser);
 		return newUser;
@@ -65,13 +66,17 @@ class AuthService {
 	 */
 
 	public async login(body: LoginSchema): Promise<User> {
-		const user = await this.userRepository.findOne({ where: { email: body.email, password: body.password } });
+		const user = await this.userRepository.findOne({ where: { email: body.email } });
 		if (!user) {
 			throw HttpException.badRequest(messages['userNotFound']);
 		}
 
 		const isValidpassword = await BcryptUtils.compare(body.password, user.password);
-		if (!isValidpassword) HttpException.badRequest(messages['invalidPassword']);
+		console.log(isValidpassword, body, 'amzing');
+
+		if (!isValidpassword) {
+			throw HttpException.badRequest(messages['invalidPassword']);
+		}
 
 		return user;
 	}
