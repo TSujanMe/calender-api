@@ -1,4 +1,6 @@
-import { IsDateString, IsDefined, IsEmail, IsOptional, IsString, IsTimeZone, isDefined, isString } from 'class-validator';
+import { HttpException } from '@base/utils/app-error';
+import { IsDateTime } from '@base/validation/isValidDate';
+import { IsDateString, IsDefined, IsEmail, IsOptional, IsString, IsTimeZone, validate, validateOrReject } from 'class-validator';
 
 export class CreateEventSchema {
 	@IsDefined()
@@ -9,10 +11,12 @@ export class CreateEventSchema {
 	@IsString()
 	description: string;
 
+	@IsDateTime()
 	@IsDefined()
 	@IsDateString()
 	startTime: Date;
 
+	@IsDateTime()
 	@IsDefined()
 	@IsDateString()
 	endTime: Date;
@@ -25,6 +29,19 @@ export class CreateEventSchema {
 	@IsTimeZone()
 	@IsDefined()
 	timezone: string;
+
+	static validateTime(body: CreateEventSchema) {
+		if (new Date() >= body.startTime) {
+			throw HttpException.badRequest('Start time must be in the future');
+		}
+		if (new Date(body.startTime) >= new Date(body.endTime)) {
+			throw HttpException.badRequest('Start time must be before end time');
+		}
+	}
+
+	static async validateCreateEventSchema(data: CreateEventSchema) {
+		CreateEventSchema.validateTime(data);
+	}
 }
 
 export class UpdateEventSchema {
@@ -52,4 +69,6 @@ export class UpdateEventSchema {
 	@IsTimeZone()
 	@IsDefined()
 	timezone: string;
+
+	validateTime() {}
 }

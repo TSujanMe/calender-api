@@ -52,6 +52,10 @@ class EventService {
 	 * @returns The newly created event.
 	 */
 	public async create(user: User, body: CreateEventSchema): Promise<Event> {
+		// if (new Date(body.startTime) > new Date(body.endTime))
+
+		CreateEventSchema.validateTime(body);
+
 		const newUser = this.eventRepository.create({
 			attendeeEmail: body.attendeeEmail,
 			startTime: body.startTime,
