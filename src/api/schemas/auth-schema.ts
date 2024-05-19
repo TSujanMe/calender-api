@@ -1,4 +1,4 @@
-import { IsDefined, IsString, isDefined, isString } from 'class-validator';
+import { IsDefined, IsString, IsTimeZone, isDefined, isString } from 'class-validator';
 
 export class LoginSchema {
 	@IsDefined()
@@ -23,7 +23,8 @@ export class RegisterSchema {
 	@IsString()
 	name: string;
 
-	@IsDefined()
+	@IsTimeZone()
 	@IsString()
+	@IsDefined()
 	timezone: string;
 }

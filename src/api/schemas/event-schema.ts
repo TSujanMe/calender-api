@@ -1,4 +1,4 @@
-import { IsDateString, IsDefined, IsEmail, IsOptional, IsString, isDefined, isString } from 'class-validator';
+import { IsDateString, IsDefined, IsEmail, IsOptional, IsString, IsTimeZone, isDefined, isString } from 'class-validator';
 
 export class CreateEventSchema {
 	@IsDefined()
@@ -44,4 +44,8 @@ export class UpdateEventSchema {
 	@IsString({ each: true })
 	@IsOptional()
 	attendeeEmail?: string[];
+
+	@IsTimeZone()
+	@IsDefined()
+	timezone: string;
 }

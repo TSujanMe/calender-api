@@ -3,7 +3,6 @@ import { HttpException } from '@base/utils/app-error';
 import { autoInjectable, singleton } from 'tsyringe';
 import { Repository } from 'typeorm'; // Importing getRepository and Repository
 import { Event } from '../models/event-model';
-import { User } from '../models/user-model';
 import { CreateEventSchema, UpdateEventSchema } from '../schemas/event-schema';
 
 /**

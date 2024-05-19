@@ -21,6 +21,9 @@ export class Event {
 	@ManyToOne(() => User)
 	creator: User;
 
+	@Column()
+	timezone: string;
+
 	@Column({ nullable: true, type: 'text' })
 	attendeeEmail: string[];
 

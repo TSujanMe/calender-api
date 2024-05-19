@@ -39,9 +39,6 @@ class AuthService {
 	 */
 	public async getEmail(email: string): Promise<User> {
 		const user = await this.userRepository.findOne({ where: { email } });
-		if (!user) {
-			throw HttpException.notFound(messages['userNotFound']);
-		}
 		return user;
 	}
 
@@ -52,7 +49,10 @@ class AuthService {
 	 * @returns {Promise<User>} - A Promise that resolves to the newly created user object if successful, or rejects with an error if the email is already taken.
 	 */
 	public async register(body: RegisterSchema): Promise<User> {
-		await this.getEmail(body.email);
+		const doesEmailExists = await this.getEmail(body.email);
+		if (doesEmailExists) {
+			throw HttpException.badRequest(messages['emailAlreadyExists']);
+		}
 		const newUser = this.userRepository.create(body);
 		await this.userRepository.save(newUser);
 		return newUser;
