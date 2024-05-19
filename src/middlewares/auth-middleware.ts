@@ -24,7 +24,6 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 
 		next();
 	} catch (error: any) {
-
 		return res.status(StatusCodes.UNAUTHORIZED).json({
 			status: false,
 			message: 'You are not authorized to perform this action',

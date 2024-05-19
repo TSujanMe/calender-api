@@ -5,25 +5,10 @@ import RequestValidator from '@base/middlewares/validation-middelware';
 import { catchAsync } from '@base/utils/catchAsync-utils';
 import { Router } from 'express';
 
-
-
-
-
 const authRouter = Router();
 
+authRouter.post('/login', RequestValidator.validate(LoginSchema), catchAsync(authIOCContainer.login.bind(authIOCContainer)));
 
-authRouter.post(
-    '/login',
-    RequestValidator.validate(LoginSchema),
-    catchAsync(authIOCContainer.login.bind(authIOCContainer))
-  );
+authRouter.post('/register', RequestValidator.validate(RegisterSchema), catchAsync(authIOCContainer.register.bind(authIOCContainer)));
 
-
-  authRouter.post(
-    '/register',
-    RequestValidator.validate(RegisterSchema),
-    catchAsync(authIOCContainer.register.bind(authIOCContainer))
-  );
-
-  
 export default authRouter;
