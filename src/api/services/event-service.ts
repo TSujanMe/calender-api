@@ -26,7 +26,7 @@ class EventService {
 	public async getEventByID(id: number): Promise<Event> {
 		const event = await this.eventRepository.findOne({ where: { id } });
 		if (!event) {
-			HttpException.badRequest('Event not found');
+			throw HttpException.badRequest('Event not found');
 		}
 		return event;
 	}

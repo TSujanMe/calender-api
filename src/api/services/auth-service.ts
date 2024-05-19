@@ -26,7 +26,7 @@ class AuthService {
 	public async getUser(id: number): Promise<User> {
 		const user = await this.userRepository.findOne({ where: { id } });
 		if (!user) {
-			HttpException.badRequest(messages['userNotFound']);
+			throw HttpException.badRequest(messages['userNotFound']);
 		}
 		return user;
 	}
@@ -40,7 +40,7 @@ class AuthService {
 	public async getEmail(email: string): Promise<User> {
 		const user = await this.userRepository.findOne({ where: { email } });
 		if (!user) {
-			HttpException.notFound(messages['userNotFound']);
+			throw HttpException.notFound(messages['userNotFound']);
 		}
 		return user;
 	}
@@ -67,7 +67,7 @@ class AuthService {
 	public async login(body: LoginSchema): Promise<User> {
 		const user = await this.userRepository.findOne({ where: { email: body.email, password: body.password } });
 		if (!user) {
-			HttpException.badRequest(messages['userNotFound']);
+			throw HttpException.badRequest(messages['userNotFound']);
 		}
 
 		const isValidpassword = await BcryptUtils.compare(body.password, user.password);
