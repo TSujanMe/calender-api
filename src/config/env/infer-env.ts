@@ -9,6 +9,8 @@ const envVariable = z.object({
 	JWT_ACCESS_TOKEN_EXPIRY_TIME_IN_MINUTEES: z.string(),
 	JWT_REFRESH_TOKEN_EXIIRY_TIME_IN_MINUTES: z.string(),
 	REDIS_URL: z.string(),
+	EMAIL_USERNAME: z.string(),
+	EMAIL_PASSWORD: z.string(),
 });
 
 envVariable.parse(process.env);

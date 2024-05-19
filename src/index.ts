@@ -14,6 +14,7 @@ import { StatusCodes } from './constants/status-code';
 import errorHandler from './middlewares/error-middleware';
 import Logger from './config/winston-config';
 import Connection from './config/mq/connection';
+import WorkerClient from './config/mq/worker';
 
 export const startServer = async () => {
 	const app: Application = express();

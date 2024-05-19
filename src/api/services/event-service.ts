@@ -5,6 +5,13 @@ import { Repository } from 'typeorm'; // Importing getRepository and Repository
 import { Event } from '../models/event-model';
 import { User } from '../models/user-model';
 import { CreateEventSchema, UpdateEventSchema } from '../schemas/event-schema';
+import Publisher from '@base/config/mq/publisher';
+import { QueueLists } from '@base/constants/queue';
+import { Queue } from 'bullmq';
+import WorkerClient from '@base/config/mq/worker';
+import Connection from '@base/config/mq/connection';
+import { EmailService } from '@base/utils/emai-utils';
+import { authConfig } from '@base/config/env/auth-env';
 
 /**
  * Service class for managing events.
@@ -13,9 +20,11 @@ import { CreateEventSchema, UpdateEventSchema } from '../schemas/event-schema';
 @singleton()
 class EventService {
 	private eventRepository: Repository<Event>;
+	private queue: Queue;
 
 	constructor() {
 		this.eventRepository = appDataSource.getRepository(Event);
+		this.queue = Publisher.createQueue(QueueLists.EMAIL);
 	}
 
 	/**
@@ -57,7 +66,7 @@ class EventService {
 		});
 		CreateEventSchema.validateTime(body);
 
-		const newUser = this.eventRepository.create({
+		const newEvent = this.eventRepository.create({
 			attendeeEmail: attendeeEmails,
 			startTime: body.startTime,
 			endTime: body.endTime,
@@ -66,8 +75,49 @@ class EventService {
 			creator: user,
 			timezone: body.timezone,
 		});
-		await this.eventRepository.save(newUser);
-		return newUser;
+		await this.eventRepository.save(newEvent);
+
+		// Now schedule it for jobs
+		const data = {
+			startDate: newEvent.startTime,
+			eventName: newEvent.title,
+		};
+		const jobNameForCurrent = newEvent.id + 'current';
+		const jobNameForSchedule = newEvent.id + 'schedule';
+		this.queue.add(jobNameForCurrent, data, {
+			removeOnComplete: true,
+		});
+
+		const immediateBefore = new Date(new Date(newEvent.startTime).getTime() - 60000); // 1 minute before
+		this.queue.add(
+			jobNameForSchedule,
+			{
+				name: 'meri pyari sagun',
+			},
+			{
+				delay: immediateBefore.getTime() - Date.now(),
+			},
+		);
+
+		const connection = Connection.getInstance();
+		WorkerClient.createWorker(
+			QueueLists.EMAIL,
+			async (job: any) => {
+				const subject = `Event: ${newEvent.title}`;
+				const text = `Event: ${newEvent.title} is scheduled at ${newEvent.startTime} to ${newEvent.endTime}`;
+				const emailService = new EmailService().sendMail({
+					from: authConfig.email.USERNAME,
+					to: body.attendeeEmail.map((data) => data.email).join(','),
+					subject: subject,
+					text,
+				});
+			},
+			{
+				connection,
+			},
+		);
+
+		return newEvent;
 	}
 
 	/**
